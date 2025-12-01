@@ -1,0 +1,97 @@
+<div class="list-container">
+  
+  <div class="header">
+    <h1>Lista de Tarefas</h1>
+    <button class="btn-add" (click)="abrirCriar()">
+      <span>+</span> Nova Tarefa
+    </button>
+  </div>
+
+  <div class="task-list">
+    <div class="list-head">
+      <div class="col-id">Ordem</div>
+      <div class="col-nome">Tarefa</div>
+      <div class="col-custo">Custo</div>
+      <div class="col-data">Data Limite</div>
+      <div class="col-actions">Ações</div>
+    </div>
+
+    <div 
+      *ngFor="let t of tarefas; let i = index; let first = first; let last = last"
+      class="task-row"
+      [class.high-cost]="t.custo >= 1000"
+      draggable="true" 
+      (dragstart)="onDragStart($event, t)"
+      (dragend)="onDragEnd($event)"
+      (dragover)="onDragOver($event)"
+      (drop)="onDrop($event, t)">
+
+      <div class="col-id">
+        <span class="drag-handle" title="Arraste para reordenar">⠿</span> 
+        {{ i + 1 }}
+      </div>
+      
+      <div class="col-nome">{{ t.nome }}</div>
+
+      <div class="col-custo" [class.text-alert]="t.custo >= 1000">
+       <span>{{ t.custo | currency:'BRL':'symbol':'1.2-2' }}</span>
+
+      </div>
+
+      <div class="col-data">{{ t.dataLimite }}</div>
+
+      <div class="col-actions">
+        <button class="btn-icon" (click)="mover(t, 'up')" [disabled]="first" title="Subir">▲</button>
+        <button class="btn-icon" (click)="mover(t, 'down')" [disabled]="last" title="Descer">▼</button>
+        <button class="btn-edit" (click)="abrirEditar(t)">Editar</button>
+        <button class="btn-delete" (click)="confirmarExcluir(t)">Excluir</button>
+      </div>
+    </div>
+
+    <div *ngIf="tarefas.length === 0" class="empty-state">
+      <p>Nenhuma tarefa cadastrada ainda.</p>
+    </div>
+  </div>
+
+  <div class="footer-total">
+    Custo Total: <span>{{ total }}</span>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="showForm">
+    <app-tarefa-form 
+      [tarefa]="formTarefa" 
+      (saved)="onSaved()" 
+      (canceled)="onCanceled()">
+    </app-tarefa-form>
+  </div>
+
+  <div class="confirm-backdrop" *ngIf="tarefaParaExcluir">
+    <div class="confirm-modal">
+      
+      <!-- Ícone de Alerta Animado -->
+      <div class="icon-box">
+        <span class="trash-icon">🗑️</span>
+      </div>
+
+      <div class="modal-content-text">
+        <h3>Excluir Tarefa?</h3>
+        <p>Você está prestes a remover permanentemente:</p>
+        
+        <div class="task-highlight">
+          {{ tarefaParaExcluir.nome }}
+        </div>
+        
+        <p class="warning-small">Essa ação não pode ser desfeita.</p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel-modal" (click)="cancelarExclusao()">
+          Cancelar
+        </button>
+        <button class="btn-delete-modal" (click)="efetivarExclusao()">
+          Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
