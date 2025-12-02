@@ -31,8 +31,8 @@ public class TarefaService {
     public Tarefa criar(TarefaCreateDTO dto) {
         validaDadosObrigatorios(dto.getNome(), dto.getCusto(), dto.getDataLimite());
 
-        if (repo.existsByNome(dto.getNome())) {
-            throw new BadRequestException("Já existe tarefa com esse nome");
+            if (repo.existsByNomeIgnoreCase(dto.getNome().trim())) {
+            throw new BadRequestException("Já existe tarefa com esse nome.");
         }
 
         Integer novaOrdem = repo.findTopByOrderByOrdemDesc()
@@ -54,10 +54,12 @@ public class TarefaService {
         validaDadosObrigatorios(dto.getNome(), dto.getCusto(), dto.getDataLimite());
 
         Tarefa existente = repo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada."));
 
-        if (repo.existsByNomeAndIdNot(dto.getNome(), id)) {
-            throw new BadRequestException("Já existe outra tarefa com esse nome");
+        String nome = dto.getNome().trim();
+
+        if (repo.existsByNomeIgnoreCaseAndIdNot(nome, id)) {
+            throw new BadRequestException("Já existe outra tarefa com esse nome.");
         }
 
         existente.setNome(dto.getNome().trim());

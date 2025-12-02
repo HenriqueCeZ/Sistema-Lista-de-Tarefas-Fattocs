@@ -14,9 +14,9 @@ public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
 
     Optional<Tarefa> findByNome(String nome);
 
-    boolean existsByNome(String nome);
+    boolean existsByNomeIgnoreCase(String nome);
 
-    boolean existsByNomeAndIdNot(String nome, Long id);
+    boolean existsByNomeIgnoreCaseAndIdNot(String nome, Long id);
 
     Optional<Tarefa> findTopByOrderByOrdemDesc();
 
