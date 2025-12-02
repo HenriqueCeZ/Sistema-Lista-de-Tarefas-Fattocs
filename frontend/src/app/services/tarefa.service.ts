@@ -2,12 +2,17 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Tarefa } from '../models/tarefa.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TarefaService {
-  private base = '/api/tarefas';
+
+  private base = environment.production
+  ? `${environment.apiUrl}/tarefas`
+  : '/api/tarefas';
+
 
   constructor(private http: HttpClient) {}
 
@@ -40,7 +45,7 @@ export class TarefaService {
   }
 
   updateOrdem(id: number, ordem: number) {
-  return this.http.patch<void>(`${this.base}/${id}/ordem`, { ordem });
-}
+    return this.http.patch<void>(`${this.base}/${id}/ordem`, { ordem });
+  }
 
 }
