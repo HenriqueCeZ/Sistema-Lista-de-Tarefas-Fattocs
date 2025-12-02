@@ -12,6 +12,7 @@ Sistema web para cadastro e gerenciamento de tarefas, com backend em **Java Spri
 - Spring Web
 - Spring Data JPA
 - H2 Database (dev)
+- PostgreSQL (prod)
 - Bean Validation (javax.validation)
 - Maven como gerenciador de dependências
 
