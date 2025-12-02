@@ -18,6 +18,9 @@ export class TarefaListComponent implements OnInit {
   total = '0';
   showForm = false;
   formTarefa?: Tarefa | null;
+  toastMessage: string | null = null;
+  toastType: 'success' | 'error' = 'success';
+  loading = false;
 
   tarefaParaExcluir: Tarefa | null = null;
 
@@ -29,12 +32,22 @@ export class TarefaListComponent implements OnInit {
     this.load();
   }
 
-  load() {
-    this.srv.listar().subscribe(t => {
-      this.tarefas = (t || []).sort((a,b)=> a.ordem - b.ordem);
+load() {
+  this.loading = true;
+
+  this.srv.listar().subscribe({
+    next: (t) => {
+      this.tarefas = (t || []).sort((a, b) => a.ordem - b.ordem);
       this.updateTotal();
-    }, err => console.error(err));
-  }
+      this.loading = false;
+    },
+    error: (err) => {
+      console.error(err);
+      this.loading = false;
+    }
+  });
+}
+
 
   updateTotal() {
     const sum = this.tarefas.reduce((acc, t) => acc + t.custo, 0);
@@ -68,9 +81,16 @@ onDrop(event: DragEvent, tarefaAlvo: Tarefa) {
   this.tarefas.splice(origemIdx, 1);
   this.tarefas.splice(destinoIdx, 0, this.draggedTarefa);
 
-  this.recalcularOrdensESalvar();
-}
+  const novaOrdem = destinoIdx + 1;
 
+  this.srv.updateOrdem(this.draggedTarefa.id!, novaOrdem).subscribe({
+    next: () => this.load(),
+    error: (e) => {
+      alert("Erro ao atualizar ordem.");
+      this.load(); 
+    }
+  });
+}
 
 recalcularOrdensESalvar() {
   const requests = this.tarefas.map((t, index) => {
@@ -79,7 +99,6 @@ recalcularOrdensESalvar() {
       t.ordem = novaOrdem;
       return this.srv.updateOrdem(t.id!, novaOrdem).pipe(
         catchError(err => {
-          console.error('Erro ao atualizar ordem da tarefa id=' + t.id, err);
           return of(null);
         })
       );
@@ -90,7 +109,6 @@ recalcularOrdensESalvar() {
   forkJoin(requests).subscribe({
     next: () => this.load(),
     error: (e) => {
-      console.error('Erro ao salvar ordens', e);
       this.load();
     }
   });
@@ -119,10 +137,21 @@ recalcularOrdensESalvar() {
     this.showForm = true;
   }
 
-  onSaved() {
-    this.showForm = false;
-    this.load();
-  }
+
+
+mostrarToast(msg: string, type: 'success' | 'error' = 'success') {
+  this.toastMessage = msg;
+  this.toastType = type;
+
+  setTimeout(() => (this.toastMessage = null), 3000);
+}
+
+
+onSaved() {
+  this.showForm = false;
+  this.load();
+  this.mostrarToast(this.formTarefa ? 'Tarefa atualizada com sucesso!' : 'Tarefa criada com sucesso!');
+}
 
   onCanceled() {
     this.showForm = false;
@@ -133,21 +162,21 @@ recalcularOrdensESalvar() {
     this.tarefaParaExcluir = t;
   }
 
-  efetivarExclusao() {
-    if (!this.tarefaParaExcluir) return;
+efetivarExclusao() {
+  if (!this.tarefaParaExcluir) return;
 
-    this.srv.excluir(this.tarefaParaExcluir.id!).subscribe({
-      next: () => {
-        this.load();
-        this.tarefaParaExcluir = null;
-      },
-      error: (e) => {
-        console.error(e);
-        alert('Erro ao excluir tarefa.');
-        this.tarefaParaExcluir = null;
-      }
-    });
-  }
+  this.srv.excluir(this.tarefaParaExcluir.id!).subscribe({
+    next: () => {
+      this.load();
+      this.mostrarToast('Tarefa excluída com sucesso!', 'success'); 
+      this.tarefaParaExcluir = null;
+    },
+    error: (e) => {
+      this.mostrarToast('Erro ao excluir tarefa', 'error');
+      this.tarefaParaExcluir = null;
+    }
+  });
+}
 
   cancelarExclusao() {
     this.tarefaParaExcluir = null;

@@ -7,7 +7,7 @@
     </button>
   </div>
 
-  <div class="task-list">
+  <div class="task-list" *ngIf="!loading">
     <div class="list-head">
       <div class="col-id">Ordem</div>
       <div class="col-nome">Tarefa</div>
@@ -67,8 +67,6 @@
 
   <div class="confirm-backdrop" *ngIf="tarefaParaExcluir">
     <div class="confirm-modal">
-      
-      <!-- Ícone de Alerta Animado -->
       <div class="icon-box">
         <span class="trash-icon">🗑️</span>
       </div>
@@ -86,12 +84,21 @@
 
       <div class="modal-actions">
         <button class="btn-cancel-modal" (click)="cancelarExclusao()">
-          Cancelar
+          Não
         </button>
         <button class="btn-delete-modal" (click)="efetivarExclusao()">
-          Excluir
+          Sim
         </button>
       </div>
     </div>
   </div>
 </div>
+
+<div class="toast-container" *ngIf="toastMessage">
+  <div class="toast-msg" [ngClass]="toastType">{{ toastMessage }}</div>
+</div>
+
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Carregando tarefas...</p>
+  </div>

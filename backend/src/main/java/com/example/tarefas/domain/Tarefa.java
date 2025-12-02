@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Tarefas", // nome exato da tabela exigido
+@Table(name = "Tarefas", 
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = "nome")
         })

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.math.BigDecimal;
 
+
 @Service
 public class TarefaService {
 
@@ -78,74 +79,49 @@ public class TarefaService {
         if (custo.compareTo(BigDecimal.ZERO) < 0) throw new BadRequestException("Custo deve ser >= 0");
         if (dataLimite == null) throw new BadRequestException("Data limite é obrigatória");
     }
-
     @Transactional
     public void moverParaCima(Long id) {
-        Tarefa t = repo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada"));
-        if (t.getOrdem() <= 1) return; // já no topo
-        int ordemAtual = t.getOrdem();
-        int ordemNova = ordemAtual - 1;
-        repo.findByOrdem(ordemNova).ifPresent(outra -> {
-            outra.setOrdem(ordemAtual);
-            repo.save(outra);
-        });
-        t.setOrdem(ordemNova);
-        repo.save(t);
+        Tarefa t = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada"));
+        if (t.getOrdem() <= 1) return;
+        atualizarOrdem(id, t.getOrdem() - 1);
     }
 
     @Transactional
     public void moverParaBaixo(Long id) {
-        Tarefa t = repo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada"));
-        int ordemAtual = t.getOrdem();
-        Integer max = repo.findTopByOrderByOrdemDesc().map(Tarefa::getOrdem).orElse(ordemAtual);
-        if (ordemAtual >= max) return; // já último
-        int ordemNova = ordemAtual + 1;
-        repo.findByOrdem(ordemNova).ifPresent(outra -> {
-            outra.setOrdem(ordemAtual);
-            repo.save(outra);
-        });
-        t.setOrdem(ordemNova);
-        repo.save(t);
+        Tarefa t = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada"));
+        Integer max = repo.findTopByOrderByOrdemDesc()
+                .map(Tarefa::getOrdem)
+                .orElse(t.getOrdem());
+        if (t.getOrdem() >= max) return;
+        atualizarOrdem(id, t.getOrdem() + 1);
     }
+
 
     @Transactional
     public void atualizarOrdem(Long id, Integer novaOrdem) {
-        if (novaOrdem == null || novaOrdem < 1) {
-            throw new BadRequestException("Ordem inválida");
+
+        Tarefa atual = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada"));
+
+        int ordemAtual = atual.getOrdem();
+
+        if (ordemAtual == novaOrdem) return;
+
+        Tarefa outra = repo.findByOrdem(novaOrdem).orElse(null);
+
+
+        atual.setOrdem(999999);
+        repo.save(atual);
+
+        if (outra != null) {
+            outra.setOrdem(ordemAtual);
+            repo.save(outra);
         }
 
-        Tarefa t = repo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada"));
-        int ordemAtual = t.getOrdem();
-
-
-        Integer max = repo.findTopByOrderByOrdemDesc()
-                .map(Tarefa::getOrdem)
-                .orElse(ordemAtual);
-
-        if (novaOrdem > max) {
-            novaOrdem = max;
-        }
-
-        if (novaOrdem.equals(ordemAtual)) {
-            return; // sem mudança
-        }
-
-        if (novaOrdem < ordemAtual) {
-            List<Tarefa> afetadas = repo.findAllByOrdemBetween(novaOrdem, ordemAtual - 1);
-            for (Tarefa x : afetadas) {
-                x.setOrdem(x.getOrdem() + 1);
-            }
-            repo.saveAll(afetadas);
-        } else {
-            List<Tarefa> afetadas = repo.findAllByOrdemBetween(ordemAtual + 1, novaOrdem);
-            for (Tarefa x : afetadas) {
-                x.setOrdem(x.getOrdem() - 1);
-            }
-            repo.saveAll(afetadas);
-        }
-
-        t.setOrdem(novaOrdem);
-        repo.save(t);
+        atual.setOrdem(novaOrdem);
+        repo.save(atual);
     }
 
 
